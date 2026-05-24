@@ -61,6 +61,13 @@ real-estate-search-agent/
 |-------|------|---------|
 | `region` | string or absent | optional human label (e.g. "West Knoxville, TN"); a skill expands it into `zip_codes` and writes them back |
 | `zip_codes` | list of 5-digit zips | one RentCast call each; the canonical field the Python core queries |
+| `center` | string or absent | radius-mode human label (e.g. "downtown Knoxville, TN"); a skill geocodes it into center_lat/center_lon |
+| `center_lat` / `center_lon` | float or absent | geocoded center for radius search |
+| `radius_miles` | number or absent | search radius. With center_lat/lon set, this triggers radius mode: ONE API call (price/beds/type pushed server-side), good for "within X miles of a point" |
+
+Search mode is `radius` when `center_lat`, `center_lon`, and `radius_miles` are all set;
+otherwise `zips`. Radius mode is one call regardless of area size; zip mode is one call
+per zip.
 | `price_min` / `price_max` | number | hard price band; `price_max` of 0 disables the ceiling |
 | `bedrooms_min` / `bathrooms_min` | number | hard minimums |
 | `acres_min` | number | hard minimum lot size in acres; 0 disables |

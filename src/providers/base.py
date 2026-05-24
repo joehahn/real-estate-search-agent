@@ -51,6 +51,17 @@ class ListingProvider(Protocol):
         """Return normalized active for-sale listings for one zip code."""
         ...
 
+    def search_radius(self, lat: float, lon: float, radius_miles: float, *,
+                      price_min: float = 0, price_max: float = 0,
+                      bedrooms_min: float = 0, property_types: list[str] | None = None,
+                      use_cache: bool = True) -> list[dict]:
+        """Return normalized active listings within radius_miles of a point.
+
+        Implementations should push whatever hard filters the vendor supports server-side
+        (price, bedrooms, property type) so a wide radius stays within result caps.
+        """
+        ...
+
     def get_property(self, address: str, *, use_cache: bool = True) -> dict | None:
         """Return one normalized listing for an address, or None if not found.
 

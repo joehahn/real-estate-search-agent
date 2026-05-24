@@ -28,27 +28,45 @@ RANK_TARGET_PATH = Path("data/rank_target.json")
 
 def cmd_search(args) -> int:
     w = load_wishlist(args.wishlist)
-    if not w.zip_codes:
-        print(f"Wishlist has region {w.region!r} but no expanded zip_codes yet. "
-              f"Run the /search-homes or /init-wishlist skill (it expands a region into a "
-              f"concrete zip list and writes it back), or add zip_codes manually.",
+    if w.search_mode == "zips" and not w.zip_codes:
+        hint = (f"center {w.center!r} is not geocoded yet" if w.center
+                else f"region {w.region!r} is not expanded yet")
+        print(f"Wishlist has no search area to query ({hint}). Run the /search-homes or "
+              f"/init-wishlist skill (it geocodes a center or expands a region and writes "
+              f"the result back), or add zip_codes / center coordinates manually.",
               file=sys.stderr)
         return 1
     provider = get_provider()
     print(f"Provider: {provider.name} | {provider.usage_note()}")
-    print(f"Wishlist: {len(w.zip_codes)} zips, price<= {w.price_max:.0f}, "
-          f">= {w.bedrooms_min:.0f}bd/{w.bathrooms_min:.0f}ba, >= {w.acres_min} acres")
+    print(f"Filters: price<= {w.price_max:.0f}, >= {w.bedrooms_min:.0f}bd/"
+          f"{w.bathrooms_min:.0f}ba, >= {w.acres_min} acres")
 
     homes: list[dict] = []
-    for z in w.zip_codes:
+    if w.search_mode == "radius":
+        print(f"Search: within {w.radius_miles:.0f} mi of {w.center or 'center'} "
+              f"({w.center_lat}, {w.center_lon}) - one API call")
         try:
-            homes.extend(provider.search_sale(z, use_cache=not args.no_cache))
+            homes = provider.search_radius(
+                w.center_lat, w.center_lon, w.radius_miles,
+                price_min=w.price_min, price_max=w.price_max,
+                bedrooms_min=w.bedrooms_min, property_types=w.property_types,
+                use_cache=not args.no_cache,
+            )
         except BudgetExceeded as e:
             print(f"  ! {e}", file=sys.stderr)
-            continue
-        except Exception as e:  # network / auth / bad-zip: skip this zip, keep going
-            print(f"  ! zip {z} failed: {e}", file=sys.stderr)
-            continue
+        except Exception as e:
+            print(f"  ! radius search failed: {e}", file=sys.stderr)
+    else:
+        print(f"Search: {len(w.zip_codes)} zips")
+        for z in w.zip_codes:
+            try:
+                homes.extend(provider.search_sale(z, use_cache=not args.no_cache))
+            except BudgetExceeded as e:
+                print(f"  ! {e}", file=sys.stderr)
+                continue
+            except Exception as e:  # network / auth / bad-zip: skip this zip, keep going
+                print(f"  ! zip {z} failed: {e}", file=sys.stderr)
+                continue
 
     if not homes:
         print("No listings pulled. Check your API key and zip codes.", file=sys.stderr)
@@ -59,9 +77,11 @@ def cmd_search(args) -> int:
           f"({len(dropped)} dropped).")
 
     CANDIDATES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    search_area = (f"within {w.radius_miles:.0f} mi of {w.center or 'center'}"
+                   if w.search_mode == "radius" else f"zips {', '.join(w.zip_codes)}")
     CANDIDATES_PATH.write_text(json.dumps({
         "provider": provider.name,
-        "wishlist_zips": w.zip_codes,
+        "search_area": search_area,
         "enrich_top_n": w.enrich_top_n,
         "count": len(ranked),
         "candidates": ranked,

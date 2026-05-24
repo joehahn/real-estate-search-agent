@@ -92,10 +92,16 @@ by hand:
 cp wishlist.example.md wishlist.md
 ```
 
-You can name a search area two ways. Set explicit `zip_codes`, or set a `region` like
-`"West Knoxville, TN"` and let the `/search-homes` (or `/init-wishlist`) skill expand it
-into a concrete zip list, which it writes back into `wishlist.md` so you see and control
-exactly which zips are queried (one API call per zip).
+You can name a search area three ways:
+
+- **Explicit zips:** `zip_codes: [37919, 37922, ...]` (one API call per zip).
+- **Region label:** `region: "West Knoxville, TN"` and the skill expands it into a zip
+  list it writes back, so you see and trim exactly which zips are queried.
+- **Center + radius:** `center: "downtown Knoxville, TN"` plus `radius_miles: 25`; the
+  skill geocodes the center and the search runs as a single API call covering the whole
+  circle (price, bedrooms, and property type are pushed server-side to stay efficient).
+  This is the cheapest mode and the best fit for "within X miles of a place," including
+  rural areas a fixed zip list would miss.
 
 ### 4. Run a search
 

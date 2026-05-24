@@ -107,6 +107,30 @@ class RentCastProvider:
         )
         return [normalize(x) for x in raw]
 
+    def search_radius(self, lat: float, lon: float, radius_miles: float, *,
+                      price_min: float = 0, price_max: float = 0,
+                      bedrooms_min: float = 0, property_types: list[str] | None = None,
+                      use_cache: bool = True) -> list[dict]:
+        """Return normalized listings within radius_miles of (lat, lon) in ONE call.
+
+        Hard filters that RentCast supports server-side (price, bedrooms, single
+        propertyType) are pushed to the API so a wide radius stays under the 500-result
+        cap. The caller still filters acres/baths locally via scoring.
+        """
+        params: dict = {
+            "latitude": round(lat, 5), "longitude": round(lon, 5),
+            "radius": radius_miles, "status": "Active", "limit": 500,
+        }
+        if price_min or price_max:
+            params["price"] = f"{int(price_min)}:{int(price_max) if price_max else 100000000}"
+        if bedrooms_min:
+            params["bedrooms"] = f"{int(bedrooms_min)}:20"
+        if property_types and len(property_types) == 1:
+            params["propertyType"] = property_types[0]
+        cache = RAW_DIR / f"rentcast-radius-{round(lat,3)}_{round(lon,3)}-{int(radius_miles)}mi-{_today()}.json"
+        raw = self._get(params, cache, use_cache)
+        return [normalize(x) for x in raw]
+
     def get_property(self, address: str, *, use_cache: bool = True) -> dict | None:
         slug = "".join(c if c.isalnum() else "-" for c in address.lower())[:60]
         cache = RAW_DIR / f"rentcast-addr-{slug}-{_today()}.json"

@@ -86,6 +86,12 @@ class RealtorRapidAPIProvider:
     def search_sale(self, zip_code: str, *, use_cache: bool = True) -> list[dict]:
         raise NotImplementedError(self._headers.__doc__ or "configure Realtor provider")
 
+    def search_radius(self, lat: float, lon: float, radius_miles: float, *,
+                      price_min: float = 0, price_max: float = 0,
+                      bedrooms_min: float = 0, property_types: list[str] | None = None,
+                      use_cache: bool = True) -> list[dict]:
+        raise NotImplementedError("configure Realtor provider; see module docstring")
+
     def get_property(self, address: str, *, use_cache: bool = True) -> dict | None:
         raise NotImplementedError("configure Realtor provider; see module docstring")
 

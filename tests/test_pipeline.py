@@ -33,7 +33,8 @@ RAW = [
 ]
 
 WISH = Wishlist(
-    zip_codes=["78613"], region=None, price_min=0, price_max=750000, bedrooms_min=3,
+    zip_codes=["78613"], region=None, center=None, center_lat=None, center_lon=None,
+    radius_miles=None, price_min=0, price_max=750000, bedrooms_min=3,
     bathrooms_min=2, acres_min=0.25, property_types=["Single Family"],
     max_days_on_market=None,
     weights={"price": 0.3, "acres": 0.3, "square_footage": 0.2, "freshness": 0.2},
@@ -106,3 +107,12 @@ def test_normalize_captures_listing_identity_and_history():
     assert n["county"] == "Knox"
     assert [e["price"] for e in n["price_history"]] == [950000.0, 900000.0]  # date-sorted
     assert n["price_cut"] is True   # current 900k < earlier 950k
+
+
+def test_search_mode_detection():
+    import dataclasses
+    zip_w = dataclasses.replace(WISH)
+    assert zip_w.search_mode == "zips"
+    radius_w = dataclasses.replace(WISH, zip_codes=[], center="downtown Knoxville, TN",
+                                   center_lat=35.96, center_lon=-83.92, radius_miles=25)
+    assert radius_w.search_mode == "radius"

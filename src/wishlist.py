@@ -20,6 +20,10 @@ from pathlib import Path
 class Wishlist:
     zip_codes: list[str]
     region: str | None
+    center: str | None
+    center_lat: float | None
+    center_lon: float | None
+    radius_miles: float | None
     price_min: float
     price_max: float
     bedrooms_min: float
@@ -30,6 +34,13 @@ class Wishlist:
     weights: dict[str, float]
     enrich_top_n: int
     raw_markdown: str = field(repr=False, default="")
+
+    @property
+    def search_mode(self) -> str:
+        """'radius' if a geocoded center + radius is set, else 'zips'."""
+        if self.center_lat is not None and self.center_lon is not None and self.radius_miles:
+            return "radius"
+        return "zips"
 
 
 def _coerce(value: str):
@@ -98,13 +109,23 @@ def load_wishlist(path: str | Path = "wishlist.md") -> Wishlist:
     parsed = _parse_block(_extract_yaml_block(md))
     zips = [str(z) for z in (parsed.get("zip_codes") or [])]
     region = parsed.get("region") or None
-    if not zips and not region:
+    center = parsed.get("center") or None
+    center_lat = parsed.get("center_lat")
+    center_lon = parsed.get("center_lon")
+    radius = parsed.get("radius_miles")
+    has_radius = center_lat is not None and center_lon is not None and radius
+    if not zips and not region and not has_radius and not center:
         raise ValueError(
-            "wishlist.md must list zip_codes, or a region for a skill to expand into zips."
+            "wishlist.md needs a search area: zip_codes, a region, or a center + "
+            "radius_miles for a skill to resolve."
         )
     return Wishlist(
         zip_codes=zips,
         region=str(region) if region else None,
+        center=str(center) if center else None,
+        center_lat=float(center_lat) if center_lat is not None else None,
+        center_lon=float(center_lon) if center_lon is not None else None,
+        radius_miles=float(radius) if radius else None,
         price_min=float(parsed.get("price_min", 0) or 0),
         price_max=float(parsed.get("price_max", 0) or 0),
         bedrooms_min=float(parsed.get("bedrooms_min", 0) or 0),

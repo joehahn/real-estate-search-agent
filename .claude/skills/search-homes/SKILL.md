@@ -23,18 +23,21 @@ location-and-risk judgment that no feed carries.
    warn the user before pulling new zips (cached zips from earlier today are free). The
    data source is whatever `DATA_PROVIDER` selects (default `rentcast`); the CLI prints it.
 
-## Step 0 - resolve region to zips (only if needed)
+## Step 0 - resolve the search area (only if needed)
 
-Read the wishlist's `region` and `zip_codes`. If `region` is set and `zip_codes` is empty
-(or the user just changed the region), expand the region into a concrete list of 5-digit
-zip codes that cover it, using your geographic knowledge. Keep the list reasonable for the
-free tier (one call per zip); if a region is huge, pick the zips that best match the
-user's price band and say which you chose and which you left out.
+Read the wishlist's search-area fields and resolve whichever mode is in use:
 
-Write the expanded list into `wishlist.md`'s `zip_codes` (keep the `region` label as a
-comment), then show the user the zips and the projected call count (`len(zips)` plus
-`python -m src.cli usage`) and let them trim before you pull. Do not silently query a long
-list of zips.
+- **Radius mode** (`center` set, but `center_lat`/`center_lon` missing): geocode the
+  center label to latitude/longitude with your knowledge and write `center_lat` and
+  `center_lon` back into `wishlist.md`. Radius mode is a single API call regardless of
+  area, so no per-zip budgeting is needed; just confirm the center and radius with the
+  user.
+- **Region mode** (`region` set, `zip_codes` empty): expand the region into a concrete
+  list of 5-digit zips with your geographic knowledge, write it into `zip_codes` (keep the
+  `region` label as a comment), then show the user the zips and the projected call count
+  (`len(zips)` plus `python -m src.cli usage`) and let them trim before you pull. Do not
+  silently query a long list of zips.
+- **Explicit zips**: nothing to resolve.
 
 ## Step 1 - structured pull, filter, score (Python)
 
