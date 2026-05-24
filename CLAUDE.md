@@ -25,13 +25,28 @@ qualitative judgment into Python or numeric ranking into the agents.
 - `reports/`, `docs/index.html`
 
 **System layer (safe to edit and commit):**
-- `src/*.py`, `scripts/*.py`, `tests/*`
+- `src/*.py`, `src/providers/*.py`, `scripts/*`, `bot/*.py`, `tests/*`
 - `.claude/agents/*`, `.claude/skills/*`
 - `wishlist.example.md`, `README.md`, `REFERENCE.md`, `CLAUDE.md`, `pyproject.toml`
 
 When the user asks to customize the search (new weights, new filters, new things to
 research), edit `wishlist.md` for their criteria, or the agent specs for shared behavior.
 Never put a user's personal criteria into `wishlist.example.md`.
+
+## Data providers
+
+The data source lives behind `src/providers/` and is chosen by `DATA_PROVIDER` (default
+`rentcast`). Never hardcode a vendor outside a provider. RentCast is fully implemented;
+`realtor` (Realtor.com via RapidAPI) is a stub to wire up on request. To add a source,
+implement the `ListingProvider` Protocol and register it in the factory; everything
+downstream is vendor-agnostic because providers emit a fixed internal schema.
+
+## Telegram bot
+
+`bot/telegram_bot.py` is the Level-C phone interface. It runs `claude -p` to drive the
+skills, gated by a chat-id allowlist. Keep secrets in `.env` (read by `load_dotenv`);
+never echo a token or key. When changing skill names or commands, update both the bot's
+command handlers and the README phone section.
 
 ## RentCast free tier discipline (important)
 

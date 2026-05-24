@@ -62,3 +62,25 @@ def test_scoring_orders_better_match_first():
     # Breakdown contributions sum to roughly the total score.
     a = ranked[0]
     assert abs(sum(a["score_breakdown"].values()) - a["score"]) < 0.5
+
+
+def test_provider_factory_selects_rentcast_and_realtor():
+    from src.providers import get_provider
+    from src.providers.rentcast import RentCastProvider
+    from src.providers.realtor_rapidapi import RealtorRapidAPIProvider
+    assert isinstance(get_provider("rentcast"), RentCastProvider)
+    assert isinstance(get_provider("realtor"), RealtorRapidAPIProvider)
+
+
+def test_unknown_provider_raises():
+    import pytest
+    from src.providers import get_provider
+    with pytest.raises(ValueError):
+        get_provider("zillow")
+
+
+def test_realtor_stub_refuses_until_configured():
+    import pytest
+    from src.providers.realtor_rapidapi import RealtorRapidAPIProvider
+    with pytest.raises((NotImplementedError, Exception)):
+        RealtorRapidAPIProvider(api_key=None).search_sale("78613")

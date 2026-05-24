@@ -14,6 +14,8 @@ __pycache__/
 wishlist.md
 data/raw/
 data/candidates.json
+data/enrichment.json
+data/rank_target.json
 data/api_usage.json
 reports/
 docs/index.html

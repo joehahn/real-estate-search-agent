@@ -30,11 +30,13 @@ the reasoning attached so you can disagree with it.
 ## Architecture
 
 ```
+phone (Telegram) ─── bot/telegram_bot.py ─── claude -p "/search-homes" | "/rank-address ..."
+                                                   │
 wishlist.md  (your hard filters + scoring weights + prose preferences)
    │
 /search-homes  (the orchestrating skill)
    │
-   ├─ 1. src/cli.py search ........ RentCast: one cached call per zip (free tier: 50/mo)
+   ├─ 1. src/cli.py search ........ provider (src/providers/): one cached call per zip
    │       ├─ src/normalize.py ..... lot sqft -> acres, derive $/sqft
    │       └─ src/scoring.py ....... hard filters + explainable weighted score (0..100)
    │                                 -> data/candidates.json
@@ -48,6 +50,8 @@ wishlist.md  (your hard filters + scoring weights + prose preferences)
    ├─ 4. report-writer (subagent) .. reports/{date}-shortlist.md
    │
    └─ 5. scripts/build_dashboard.py  docs/index.html (Leaflet map, GitHub Pages ready)
+
+/rank-address  (single-property skill; the phone's /rank command) reuses steps 1-2 for one home.
 ```
 
 The deterministic core (`src/`) is unit-tested and runs without any LLM. The two
@@ -101,14 +105,71 @@ python -m src.cli usage       # shows RentCast calls used this month
 python scripts/build_dashboard.py   # rebuilds the map from the latest data
 ```
 
-## A note on data sources
+## Texting the agent from your phone (Level C)
+
+You do not need the laptop with you to use this. The laptop is the server; your phone is
+a thin client over Telegram. The bot runs where the repo and the keys live, accepts
+commands from an allowlisted chat, runs the skills, and texts the answer back. Your phone
+never sees a key.
+
+```
+phone --Telegram--> bot/telegram_bot.py --> claude -p "/rank-address ..." --> skills/subagents
+phone <--Telegram-- bot <--------------------- Claude's final reply
+```
+
+**Setup**
+
+1. In Telegram, message **@BotFather**, create a bot, copy its token into `.env` as
+   `TELEGRAM_BOT_TOKEN`.
+2. Start the bot, keeping the laptop awake:
+   ```bash
+   caffeinate -s ./scripts/run_bot.sh
+   ```
+3. Message your bot `/whoami`, copy the chat id it returns into
+   `TELEGRAM_ALLOWED_CHAT_IDS` in `.env`. Only that chat can now run actions.
+4. Grant the bot scoped permission to run the skills by setting `CLAUDE_ARGS` in `.env`,
+   then restart:
+   ```
+   CLAUDE_ARGS=--allowedTools Bash(python*) Task Read Write WebSearch WebFetch
+   ```
+
+**Security model.** The bot runs `claude -p` on your machine, so it ships locked down:
+the chat-id allowlist is mandatory, `CLAUDE_ARGS` is empty until you grant permission
+(prefer the scoped allowlist above over `--permission-mode bypassPermissions`), and
+open-ended free text is ignored unless you set `BOT_ALLOW_FREEFORM=1`. Treat the bot
+token like a password: anyone holding it can talk to your bot, and the allowlist plus
+scoped permissions are what keep that from becoming code execution on your laptop.
+
+**Commands from your phone**
+
+- `/search` runs a full search and texts back the top picks.
+- `/rank 123 Ranch Rd, Cedar Park, TX` evaluates the house you are parked in front of.
+- `/usage` shows your data-provider quota for the month.
+- Any other message is handed to the agent to interpret, but only if you opt in with
+  `BOT_ALLOW_FREEFORM=1` (off by default).
+
+**Two real constraints.** The laptop must stay awake, plugged in, and online (use
+`caffeinate`), and the RentCast free tier is 50 calls a month, so a full `/search` is a
+once-or-twice-a-day action, not a continuous poll. The `/rank` command is cheap (one
+property lookup), which is why it is the natural in-the-field tool. To remove the laptop
+dependency entirely later, run the bot on a small always-on box (a cloud VM or a
+Raspberry Pi at home); nothing else changes.
+
+## Data sources: pluggable, RentCast first
 
 The major consumer portals (Zillow, Realtor.com, Redfin) actively block automated access
-and their terms forbid scraping, so this project does not touch them. It uses RentCast, a
-licensed real estate data API, as its single structured source. The agents enrich with
-ordinary public web research. If you want full MLS coverage, that requires a licensed
-agent or broker relationship or a paid RESO data feed; the architecture here drops in
-behind any such source by swapping `src/rentcast.py`.
+and their terms forbid scraping, so this project does not scrape them. Data comes through
+a provider interface (`src/providers/`) so the source is swappable:
+
+- **RentCast** (default, `DATA_PROVIDER=rentcast`): a licensed real estate data API with a
+  free tier. Fully implemented.
+- **Realtor.com via RapidAPI** (`DATA_PROVIDER=realtor`): a scaffolded provider
+  (`src/providers/realtor_rapidapi.py`) ready to wire up if you decide it adds value. Set
+  the RapidAPI key and host, confirm the endpoint and field mapping, and flip the env var;
+  nothing downstream changes because every provider emits the same internal schema.
+
+Full MLS coverage requires a licensed agent or broker relationship or a paid RESO feed;
+that too drops in as another provider.
 
 ## Testing
 

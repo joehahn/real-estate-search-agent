@@ -20,7 +20,8 @@ location-and-risk judgment that no feed carries.
    is missing, tell the user to `cp .env.example .env` and paste their key. The free tier
    is 50 calls/month and the client caps itself at 45; one call per zip.
 3. Check the budget: run `python -m src.cli usage`. If the month's calls are near the cap,
-   warn the user before pulling new zips (cached zips from earlier today are free).
+   warn the user before pulling new zips (cached zips from earlier today are free). The
+   data source is whatever `DATA_PROVIDER` selects (default `rentcast`); the CLI prints it.
 
 ## Step 1 - structured pull, filter, score (Python)
 

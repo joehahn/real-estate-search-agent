@@ -16,13 +16,21 @@ real-estate-search-agent/
 │
 ├── src/
 │   ├── wishlist.py           parse wishlist.md -> Wishlist dataclass
-│   ├── rentcast.py           RentCast client: cache + monthly budget tracking
 │   ├── normalize.py          raw listing -> internal schema (acres, $/sqft)
 │   ├── scoring.py            hard filters + explainable weighted score
-│   └── cli.py                `search` and `usage` commands
+│   ├── cli.py                `search`, `rank`, `usage` commands
+│   └── providers/
+│       ├── base.py               provider Protocol + load_dotenv + internal schema
+│       ├── rentcast.py           RentCast impl: cache + monthly budget tracking
+│       ├── realtor_rapidapi.py   Realtor.com via RapidAPI (stub, ready to wire up)
+│       └── __init__.py           get_provider() factory (DATA_PROVIDER env)
+│
+├── bot/
+│   └── telegram_bot.py       Level-C two-way bot: phone -> claude -p -> reply
 │
 ├── scripts/
-│   └── build_dashboard.py    candidates + enrichment -> docs/index.html (Leaflet map)
+│   ├── build_dashboard.py    candidates + enrichment -> docs/index.html (Leaflet map)
+│   └── run_bot.sh            start the Telegram bot (wrap in caffeinate to stay awake)
 │
 ├── .claude/
 │   ├── agents/
@@ -30,15 +38,17 @@ real-estate-search-agent/
 │   │   └── report-writer.md      report-composition subagent
 │   └── skills/
 │       ├── search-homes/SKILL.md   the end-to-end orchestrator
+│       ├── rank-address/SKILL.md   evaluate one property by address (phone /rank)
 │       └── init-wishlist/SKILL.md  guided wishlist setup
 │
 ├── tests/
 │   └── test_pipeline.py      parsing, normalization, filters, scoring
 │
 ├── data/                     (gitignored contents)
-│   ├── raw/{zip}-{date}.json     cached RentCast pulls
+│   ├── raw/{provider}-{key}-{date}.json   cached provider pulls
 │   ├── candidates.json           filtered + scored homes (Python -> skill handoff)
 │   ├── enrichment.json           analyst verdicts (skill -> report handoff)
+│   ├── rank_target.json          single property for /rank-address
 │   └── api_usage.json            {month: calls_used}
 │
 ├── reports/{date}-shortlist.md   the buyer-facing report (gitignored)
@@ -112,9 +122,21 @@ Homes with `deal_breaker_status == "eliminate"` are removed from picks and liste
 report's eliminated section with the triggering reason. The 0.6/0.4 split is a default;
 the skill adjusts it on request and states the split used in the report.
 
-## Extending to another data source
+## Adding a data provider
 
-Replace `src/rentcast.py` with a client that returns a list of raw listing dicts per
-search. As long as `normalize.py` can map the fields (price, bedrooms, bathrooms,
-squareFootage, lotSize, latitude, longitude, formattedAddress, ...), the rest of the
-pipeline is source-agnostic.
+Implement the `ListingProvider` Protocol from `src/providers/base.py`: `search_sale(zip)`,
+`get_property(address)`, and `usage_note()`, each returning internal-schema dicts (do the
+vendor-specific field mapping inside the provider). Register it in
+`src/providers/__init__.py`'s `get_provider()` factory, then select it with
+`DATA_PROVIDER=<name>`. Nothing downstream (scoring, CLI, skills, bot, dashboard) changes
+because they only ever see the internal schema. `realtor_rapidapi.py` is a worked-example
+skeleton; its docstring lists the four things to fill in.
+
+## Telegram bot (Level C)
+
+`bot/telegram_bot.py` long-polls Telegram, accepts commands only from chat ids in
+`TELEGRAM_ALLOWED_CHAT_IDS`, and runs the project via `claude -p` (extra permission args
+from `CLAUDE_ARGS`, default `--permission-mode bypassPermissions`). `/usage` calls the
+Python CLI directly (no LLM); `/search` and `/rank` and free text go through `claude -p`.
+The bot reads its token from the gitignored `.env`, so the phone never handles a key. Run
+it with `caffeinate -s ./scripts/run_bot.sh` to keep the laptop awake.
