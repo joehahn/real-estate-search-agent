@@ -28,6 +28,12 @@ RANK_TARGET_PATH = Path("data/rank_target.json")
 
 def cmd_search(args) -> int:
     w = load_wishlist(args.wishlist)
+    if not w.zip_codes:
+        print(f"Wishlist has region {w.region!r} but no expanded zip_codes yet. "
+              f"Run the /search-homes or /init-wishlist skill (it expands a region into a "
+              f"concrete zip list and writes it back), or add zip_codes manually.",
+              file=sys.stderr)
+        return 1
     provider = get_provider()
     print(f"Provider: {provider.name} | {provider.usage_note()}")
     print(f"Wishlist: {len(w.zip_codes)} zips, price<= {w.price_max:.0f}, "

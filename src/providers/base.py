@@ -7,9 +7,14 @@ agnostic. To pivot from RentCast to Realtor.com (via RapidAPI), you implement a 
 provider and flip the DATA_PROVIDER env var; nothing downstream changes.
 
 Internal listing schema (what every provider must emit per home):
-    id, address, city, state, zip, lat, lon, property_type, price, bedrooms,
-    bathrooms, sqft, acres, price_per_sqft, year_built, days_on_market,
-    listed_date, hoa_fee, status
+    id, address, city, state, zip, county, lat, lon, property_type, price, bedrooms,
+    bathrooms, sqft, acres, price_per_sqft, year_built, days_on_market, listed_date,
+    hoa_fee, status, mls_number, mls_name, listing_agent, listing_office,
+    price_history, price_cut
+
+RentCast carries no portal URL, so mls_number + listing_agent (name/phone/email/website)
+are how a buyer finds and reaches a listing; price_history is a date-sorted list of events
+and price_cut is a derived bool. A provider that lacks some of these may set them to None.
 """
 from __future__ import annotations
 

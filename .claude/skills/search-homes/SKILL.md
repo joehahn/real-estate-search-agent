@@ -23,6 +23,19 @@ location-and-risk judgment that no feed carries.
    warn the user before pulling new zips (cached zips from earlier today are free). The
    data source is whatever `DATA_PROVIDER` selects (default `rentcast`); the CLI prints it.
 
+## Step 0 - resolve region to zips (only if needed)
+
+Read the wishlist's `region` and `zip_codes`. If `region` is set and `zip_codes` is empty
+(or the user just changed the region), expand the region into a concrete list of 5-digit
+zip codes that cover it, using your geographic knowledge. Keep the list reasonable for the
+free tier (one call per zip); if a region is huge, pick the zips that best match the
+user's price band and say which you chose and which you left out.
+
+Write the expanded list into `wishlist.md`'s `zip_codes` (keep the `region` label as a
+comment), then show the user the zips and the projected call count (`len(zips)` plus
+`python -m src.cli usage`) and let them trim before you pull. Do not silently query a long
+list of zips.
+
 ## Step 1 - structured pull, filter, score (Python)
 
 ```bash

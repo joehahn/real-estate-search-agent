@@ -41,6 +41,14 @@ def _popup(home: dict, enr: dict | None) -> str:
         f"{price} &middot; {home.get('bedrooms') or '?'}bd/"
         f"{home.get('bathrooms') or '?'}ba &middot; {home.get('acres') or '?'} ac",
     ]
+    if home.get("price_cut"):
+        rows.append("&#9660; price cut on record")
+    if home.get("mls_number"):
+        rows.append(f"MLS #{home['mls_number']} ({home.get('mls_name') or ''})")
+    agent = home.get("listing_agent") or {}
+    if agent.get("name"):
+        contact = agent["name"] + (f" &middot; {agent['phone']}" if agent.get("phone") else "")
+        rows.append(f"Agent: {contact}")
     if enr:
         rows.append(f"Analyst: {enr.get('qual_score', '?')}/10 "
                     f"({enr.get('deal_breaker_status', '?')})")

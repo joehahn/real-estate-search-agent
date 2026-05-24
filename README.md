@@ -92,6 +92,11 @@ by hand:
 cp wishlist.example.md wishlist.md
 ```
 
+You can name a search area two ways. Set explicit `zip_codes`, or set a `region` like
+`"West Knoxville, TN"` and let the `/search-homes` (or `/init-wishlist`) skill expand it
+into a concrete zip list, which it writes back into `wishlist.md` so you see and control
+exactly which zips are queried (one API call per zip).
+
 ### 4. Run a search
 
 In Claude Code, run `/search-homes`. It pulls listings, scores them, dispatches the

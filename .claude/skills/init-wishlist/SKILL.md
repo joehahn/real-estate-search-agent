@@ -16,7 +16,11 @@ the search: hard filters and scoring weights in its YAML block, prose preference
 
 2. Interview the user for the fields that need real values. Ask in plain language, a few
    at a time, not as a wall of questions:
-   - Which zip codes should I search? (one RentCast call each; 3 to 6 is a good range)
+   - Where do you want to search? Accept either a region in plain words (for example
+     "West Knoxville, TN") or specific zip codes. If they give a region, expand it into a
+     concrete zip list with your geographic knowledge, set both `region` and `zip_codes`,
+     and show them the zips so they can trim. One RentCast call per zip; 3 to 8 is a good
+     range for the free tier.
    - Price ceiling? Any floor?
    - Minimum bedrooms and bathrooms?
    - Minimum lot size in acres? (0 to ignore)

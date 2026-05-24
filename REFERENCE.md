@@ -59,7 +59,8 @@ real-estate-search-agent/
 
 | Field | Type | Meaning |
 |-------|------|---------|
-| `zip_codes` | list of 5-digit zips | one RentCast call each |
+| `region` | string or absent | optional human label (e.g. "West Knoxville, TN"); a skill expands it into `zip_codes` and writes them back |
+| `zip_codes` | list of 5-digit zips | one RentCast call each; the canonical field the Python core queries |
 | `price_min` / `price_max` | number | hard price band; `price_max` of 0 disables the ceiling |
 | `bedrooms_min` / `bathrooms_min` | number | hard minimums |
 | `acres_min` | number | hard minimum lot size in acres; 0 disables |
@@ -96,7 +97,12 @@ divides by 43,560 for acres. See <https://developers.rentcast.io/reference/sale-
       "property_type": "Single Family", "price": 540000,
       "bedrooms": 4, "bathrooms": 3, "sqft": 2600, "acres": 1.1,
       "price_per_sqft": 207.7, "year_built": 2015, "days_on_market": 7,
-      "hoa_fee": null, "status": "Active",
+      "hoa_fee": null, "status": "Active", "county": "Knox",
+      "mls_number": "1333474", "mls_name": "EastTennessee",
+      "listing_agent": {"name": "...", "phone": "...", "email": "...", "website": "..."},
+      "listing_office": {"name": "..."},
+      "price_history": [{"date": "2026-03-20", "event": "Sale Listing", "price": 1200000}],
+      "price_cut": false,
       "score": 79.0,
       "score_breakdown": {"price": 22.1, "acres": 25.0, "square_footage": 12.3, "...": 0.0}
     }

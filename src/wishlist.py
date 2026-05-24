@@ -19,6 +19,7 @@ from pathlib import Path
 @dataclass
 class Wishlist:
     zip_codes: list[str]
+    region: str | None
     price_min: float
     price_max: float
     bedrooms_min: float
@@ -96,10 +97,14 @@ def load_wishlist(path: str | Path = "wishlist.md") -> Wishlist:
     md = p.read_text()
     parsed = _parse_block(_extract_yaml_block(md))
     zips = [str(z) for z in (parsed.get("zip_codes") or [])]
-    if not zips:
-        raise ValueError("wishlist.md must list at least one zip code")
+    region = parsed.get("region") or None
+    if not zips and not region:
+        raise ValueError(
+            "wishlist.md must list zip_codes, or a region for a skill to expand into zips."
+        )
     return Wishlist(
         zip_codes=zips,
+        region=str(region) if region else None,
         price_min=float(parsed.get("price_min", 0) or 0),
         price_max=float(parsed.get("price_max", 0) or 0),
         bedrooms_min=float(parsed.get("bedrooms_min", 0) or 0),

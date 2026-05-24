@@ -33,7 +33,7 @@ RAW = [
 ]
 
 WISH = Wishlist(
-    zip_codes=["78613"], price_min=0, price_max=750000, bedrooms_min=3,
+    zip_codes=["78613"], region=None, price_min=0, price_max=750000, bedrooms_min=3,
     bathrooms_min=2, acres_min=0.25, property_types=["Single Family"],
     max_days_on_market=None,
     weights={"price": 0.3, "acres": 0.3, "square_footage": 0.2, "freshness": 0.2},
@@ -84,3 +84,25 @@ def test_realtor_stub_refuses_until_configured():
     from src.providers.realtor_rapidapi import RealtorRapidAPIProvider
     with pytest.raises((NotImplementedError, Exception)):
         RealtorRapidAPIProvider(api_key=None).search_sale("78613")
+
+
+def test_normalize_captures_listing_identity_and_history():
+    raw = {
+        "formattedAddress": "9 Test Rd, Knoxville, TN 37934", "zipCode": 37934,
+        "propertyType": "Single Family", "price": 900000, "bedrooms": 5,
+        "bathrooms": 3, "squareFootage": 3000, "lotSize": 43560, "county": "Knox",
+        "mlsNumber": "1234567", "mlsName": "EastTennessee",
+        "listingAgent": {"name": "Jane Doe", "phone": "8655551212", "email": "j@x.com"},
+        "listingOffice": {"name": "Acme Realty"},
+        "history": {
+            "2026-01-01": {"event": "Sale Listing", "price": 950000, "listedDate": "2026-01-01T00:00:00.000Z"},
+            "2026-03-01": {"event": "Price Change", "price": 900000, "listedDate": "2026-03-01T00:00:00.000Z"},
+        },
+    }
+    n = normalize(raw)
+    assert n["mls_number"] == "1234567"
+    assert n["listing_agent"]["phone"] == "8655551212"
+    assert n["listing_office"]["name"] == "Acme Realty"
+    assert n["county"] == "Knox"
+    assert [e["price"] for e in n["price_history"]] == [950000.0, 900000.0]  # date-sorted
+    assert n["price_cut"] is True   # current 900k < earlier 950k

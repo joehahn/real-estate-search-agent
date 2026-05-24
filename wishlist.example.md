@@ -11,6 +11,11 @@ personal search stays private.
 
 ```yaml
 # ----- Hard filters (applied first, deterministically; non-matching homes are dropped) -----
+# You can give a human region label and/or an explicit zip list. If you set `region` and
+# leave zip_codes empty, the /search-homes (or /init-wishlist) skill expands the region
+# into a concrete zip list and writes it back here, so you always see and control exactly
+# which zips are queried (one RentCast call per zip). region is optional.
+region: "West Knoxville, TN"        # optional human label; delete if you only use zips
 zip_codes: [78613, 78641, 78626]   # 5-digit zips to search. One RentCast call per zip.
 price_min: 0
 price_max: 650000

@@ -42,11 +42,17 @@ Searched {zips}. {N} listings pulled, {M} passed your hard filters, top {K} rese
 
 ### 1. {address} - score {score}/100, analyst {qual_score}/10
 - **Price:** ${price} | {beds}bd/{baths}ba | {acres} acres | {sqft} sqft | {$/sqft}/sqft
+- **Listing:** MLS #{mls_number} ({mls_name}) | Agent {listing_agent.name}, {listing_agent.phone} | {note "price cut on record" if price_cut}
 - **Why it ranks here:** {plain-language read of the score_breakdown: what carried it}
 - **Highlights:** {analyst highlights}
 - **Check before you go:** {analyst concerns}
 - **Flood:** {finding} ([source]) · **Schools:** {finding} ([source]) · **Commute:** {finding} ([source])
 - **Verdict:** {analyst verdict}
+
+RentCast carries no portal URL, so cite the MLS number and the listing agent's phone as
+the way to act on a home. You may add a reliable address-search link, for example
+`https://www.zillow.com/homes/{address-with-dashes}_rb/`, but label it a search link, not
+a verified listing page. If `price_history` shows a cut, mention it; buyers care.
 
 ### 2. ...
 
