@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Secrets - never commit a real key. Only .env.example is tracked.
+.env
+.env.*
+!.env.example
+
+# User data (personal wishlist + pulled listings + generated output)
+wishlist.md
+data/raw/
+data/candidates.json
+data/api_usage.json
+reports/
+docs/index.html
+
+# OS
+.DS_Store

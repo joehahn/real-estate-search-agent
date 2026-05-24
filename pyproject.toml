@@ -1,0 +1,28 @@
+[project]
+name = "real-estate-search-agent"
+version = "0.1.0"
+description = "AI-driven home search: a deterministic ranking core plus Claude subagents that enrich and explain a ranked shortlist of for-sale properties."
+authors = [{ name = "Joe Hahn", email = "jmh.datasciences@gmail.com" }]
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+    "folium>=0.16",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+home-search = "src.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
