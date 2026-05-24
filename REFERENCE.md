@@ -64,6 +64,8 @@ real-estate-search-agent/
 | `center` | string or absent | radius-mode human label (e.g. "downtown Knoxville, TN"); a skill geocodes it into center_lat/center_lon |
 | `center_lat` / `center_lon` | float or absent | geocoded center for radius search |
 | `radius_miles` | number or absent | search radius. With center_lat/lon set, this triggers radius mode: ONE API call (price/beds/type pushed server-side), good for "within X miles of a point" |
+| `prefer_near` | string or absent | preferred-area label; a skill geocodes it into prefer_lat/prefer_lon. Drives the `proximity` weight (homes are still searched area-wide, but closer ones score higher) |
+| `prefer_lat` / `prefer_lon` | float or absent | geocoded preferred point for proximity scoring |
 
 Search mode is `radius` when `center_lat`, `center_lon`, and `radius_miles` are all set;
 otherwise `zips`. Radius mode is one call regardless of area size; zip mode is one call
@@ -77,8 +79,10 @@ per zip.
 | `enrich_top_n` | int | how many top homes get analyst enrichment |
 
 Scoring weight keys: `price`, `acres`, `square_footage`, `price_per_sqft`, `bedrooms`,
-`bathrooms`, `freshness`. For `price`, `price_per_sqft`, and `freshness` (days on
-market), a lower raw value scores higher; for the rest, higher scores higher. Each
+`bathrooms`, `freshness`, `proximity`. For `price`, `price_per_sqft`, `freshness` (days on
+market), and `proximity` (miles from prefer_near), a lower raw value scores higher; for
+the rest, higher scores higher. `proximity` is only applied when `prefer_lat`/`prefer_lon`
+are set; otherwise its weight is dropped so it does not dilute the others. Each
 dimension is min-max normalized across the surviving candidate pool, so the score is
 relative to what is actually for sale right now.
 

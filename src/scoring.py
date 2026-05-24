@@ -57,6 +57,19 @@ def _norm(v, lo, hi, *, higher_is_better: bool) -> float:
     return frac if higher_is_better else 1.0 - frac
 
 
+import math
+
+
+def _haversine_mi(lat1, lon1, lat2, lon2) -> float | None:
+    if None in (lat1, lon1, lat2, lon2):
+        return None
+    r = 3958.8
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return round(2 * r * math.asin(math.sqrt(a)), 2)
+
+
 # Each dimension: which normalized field, and whether higher raw value is better.
 _DIMS = {
     "price": ("price", False),
@@ -66,6 +79,7 @@ _DIMS = {
     "bedrooms": ("bedrooms", True),
     "bathrooms": ("bathrooms", True),
     "freshness": ("days_on_market", False),
+    "proximity": ("distance_pref_mi", False),  # closer to prefer_near scores higher
 }
 
 
@@ -74,7 +88,18 @@ def score_candidates(homes: list[dict], w: Wishlist) -> list[dict]:
     if not homes:
         return []
 
-    total_weight = sum(w.weights.values()) or 1.0
+    # Proximity dimension: distance from each home to the preferred point. Only active if
+    # the wishlist gives a geocoded prefer_near; otherwise we drop the weight so it does
+    # not dilute the others.
+    weights = dict(w.weights)
+    if w.prefer_lat is not None and w.prefer_lon is not None:
+        for h in homes:
+            h["distance_pref_mi"] = _haversine_mi(
+                h.get("lat"), h.get("lon"), w.prefer_lat, w.prefer_lon)
+    else:
+        weights.pop("proximity", None)
+
+    total_weight = sum(weights.values()) or 1.0
     ranges = {
         dim: _minmax([h.get(field) for h in homes])
         for dim, (field, _) in _DIMS.items()
@@ -83,7 +108,7 @@ def score_candidates(homes: list[dict], w: Wishlist) -> list[dict]:
     for h in homes:
         breakdown = {}
         score = 0.0
-        for dim, weight in w.weights.items():
+        for dim, weight in weights.items():
             if dim not in _DIMS or weight == 0:
                 continue
             field, higher = _DIMS[dim]

@@ -39,6 +39,11 @@ Read the wishlist's search-area fields and resolve whichever mode is in use:
   silently query a long list of zips.
 - **Explicit zips**: nothing to resolve.
 
+Also: if `prefer_near` is set but `prefer_lat`/`prefer_lon` are missing, geocode it and
+write the coordinates back. This is the preferred-area point that drives the `proximity`
+scoring weight; homes are still searched across the whole area, but closer ones rank
+higher.
+
 ## Step 1 - structured pull, filter, score (Python)
 
 ```bash

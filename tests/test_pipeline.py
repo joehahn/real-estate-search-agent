@@ -34,7 +34,8 @@ RAW = [
 
 WISH = Wishlist(
     zip_codes=["78613"], region=None, center=None, center_lat=None, center_lon=None,
-    radius_miles=None, price_min=0, price_max=750000, bedrooms_min=3,
+    radius_miles=None, prefer_near=None, prefer_lat=None, prefer_lon=None,
+    price_min=0, price_max=750000, bedrooms_min=3,
     bathrooms_min=2, acres_min=0.25, property_types=["Single Family"],
     max_days_on_market=None,
     weights={"price": 0.3, "acres": 0.3, "square_footage": 0.2, "freshness": 0.2},
@@ -116,3 +117,28 @@ def test_search_mode_detection():
     radius_w = dataclasses.replace(WISH, zip_codes=[], center="downtown Knoxville, TN",
                                    center_lat=35.96, center_lon=-83.92, radius_miles=25)
     assert radius_w.search_mode == "radius"
+
+
+def test_proximity_dimension_rewards_closer_homes():
+    import dataclasses
+    # Two identical homes except location; prefer point sits on top of the "near" one.
+    near = {"id": "near", "formattedAddress": "near", "zipCode": 1, "latitude": 35.92,
+            "longitude": -84.05, "propertyType": "Single Family", "price": 800000,
+            "bedrooms": 5, "bathrooms": 3, "squareFootage": 3000, "lotSize": 43560}
+    far = {**near, "id": "far", "latitude": 36.5, "longitude": -83.0}
+    w = dataclasses.replace(
+        WISH, price_max=1000000, bedrooms_min=5, acres_min=0.5,
+        prefer_near="X", prefer_lat=35.92, prefer_lon=-84.05,
+        weights={"proximity": 1.0},
+    )
+    ranked, _ = filter_and_score([normalize(near), normalize(far)], w)
+    assert ranked[0]["id"] == "near"
+    assert ranked[0]["distance_pref_mi"] < ranked[1]["distance_pref_mi"]
+
+
+def test_proximity_weight_dropped_when_no_prefer_point():
+    # With no prefer point, a proximity weight must not blow up or dominate.
+    ranked, _ = filter_and_score([normalize(r) for r in RAW],
+                                 __import__("dataclasses").replace(
+                                     WISH, weights={"price": 0.5, "proximity": 0.5}))
+    assert "proximity" not in ranked[0]["score_breakdown"]
