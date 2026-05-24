@@ -26,6 +26,9 @@ The skill passes:
 - Lead with the answer. The buyer wants the shortlist, not a preamble.
 - Be honest about weaknesses. A report that only sells is useless. Every home gets both
   what is good and what to check.
+- If a home's `deal_breaker_status` is `caution`, lead its "Check before you go" line with
+  a visible marker (for example "WARNING:") naming the triggered Warning-flags item, so it
+  is impossible to miss while skimming.
 - Cite the analyst's source links inline so the buyer can verify.
 - Money and distances stay concrete (`$540,000`, `~28 min`), never vague.
 

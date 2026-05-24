@@ -30,8 +30,9 @@ Usage: `/rank-address 123 Ranch Rd, Cedar Park, TX 78613`
    acres, type). Note any that fail; a hard fail is worth saying up front.
 
 4. Spawn ONE `property-analyst` subagent. Pass `property` = the contents of
-   `data/rank_target.json` and `wishlist_prose` = the four prose sections of
-   `wishlist.md`. Wait for its JSON verdict.
+   `data/rank_target.json` and `wishlist_prose` = the prose sections of `wishlist.md`
+   (Must-haves, Nice-to-haves, Warning flags, Deal-breakers, Lifestyle/commute). Wait for
+   its JSON verdict.
 
 5. Reply with a tight summary the user can read on a phone:
    - One line: address, price, beds/baths, acres.

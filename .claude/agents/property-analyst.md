@@ -21,8 +21,8 @@ The orchestrating skill passes a self-contained prompt containing:
 
 - `property`: the normalized listing object (address, lat/lon, price, beds, baths,
   acres, sqft, year_built, days_on_market, zip).
-- `wishlist_prose`: the Must-haves, Nice-to-haves, Deal-breakers, and Lifestyle/commute
-  sections from `wishlist.md`. This is your fit anchor.
+- `wishlist_prose`: the Must-haves, Nice-to-haves, Warning flags, Deal-breakers, and
+  Lifestyle/commute sections from `wishlist.md`. This is your fit anchor.
 
 ## What to research (2 to 5 targeted web lookups, no more)
 
@@ -51,11 +51,17 @@ Return a `qual_score` from 0 to 10 reflecting how good this property looks once 
 and risk are factored in (10 = exceptional, drive out this weekend; 0 = do not bother).
 This is independent of the deterministic numeric score; the skill combines the two.
 
-Also classify deal-breaker status:
-- `clear` = no listed deal-breaker appears to be triggered.
-- `caution` = a possible issue worth verifying in person or with the agent.
-- `eliminate` = a deal-breaker is clearly triggered (e.g., FEMA AE zone when the
-  must-haves forbid flood plains). Explain which one.
+Also classify `deal_breaker_status`, which encodes three tiers driven by the wishlist:
+- `eliminate` = a Deal-breaker is clearly triggered, or a Must-have clearly fails (e.g.,
+  FEMA AE zone when the must-haves forbid flood plains). Name which one.
+- `caution` = a Warning-flags item is triggered or plausibly triggered (e.g., the home is
+  on an arterial road), or you found another real concern worth verifying in person. The
+  home stays in the running but the issue must appear in `concerns` and the verdict.
+- `clear` = nothing from Deal-breakers, Must-haves, or Warning flags appears triggered.
+
+When a Warning-flags item cannot be confirmed from sources (for example, you cannot tell
+if the street is a busy arterial), use `caution` with the concern stated as unverified,
+rather than `clear`. Warning flags should never be silently dropped.
 
 ## Output schema
 

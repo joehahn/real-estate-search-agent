@@ -41,12 +41,9 @@ weights:
 enrich_top_n: 8          # how many top-ranked homes get web-research enrichment by the subagent
 ```
 
-## Must-haves (hard, but not in RentCast's structured data)
-
-The analyst should flag any candidate that clearly fails one of these so you can drop it.
+## Must-haves (the analyst eliminates a home that clearly fails one)
 
 - Not on a flood plain (FEMA zone A/AE is a hard no).
-- Not directly on a major highway or arterial road.
 - A usable, mostly-flat back yard (not all slope or ravine).
 
 ## Nice-to-haves (reward these in the writeup, do not eliminate)
@@ -56,7 +53,17 @@ The analyst should flag any candidate that clearly fails one of these so you can
 - Quiet street, cul-de-sac preferred.
 - Good or improving school ratings.
 
-## Deal-breakers (eliminate)
+## Warning flags (the analyst marks these "caution": surfaced loudly, not eliminated)
+
+Use this for things that should stop you from a wasted trip or sharpen your questions,
+but that you would not auto-reject a home over. The right call depends on the rest of the
+deal.
+
+- Directly on a major highway or arterial road.
+- Very old construction without evidence of major systems updates.
+- Backs onto commercial property or a busy parking lot.
+
+## Deal-breakers (the analyst eliminates these from picks)
 
 - HOA fee over $100/month.
 - Active foundation issues mentioned in the listing or inspection notes.

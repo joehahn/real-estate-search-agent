@@ -75,8 +75,11 @@ market), a lower raw value scores higher; for the rest, higher scores higher. Ea
 dimension is min-max normalized across the surviving candidate pool, so the score is
 relative to what is actually for sale right now.
 
-The prose sections (Must-haves, Nice-to-haves, Deal-breakers, Lifestyle/commute) are not
-parsed by Python. They are passed verbatim to the `property-analyst` subagent.
+The prose sections (Must-haves, Nice-to-haves, Warning flags, Deal-breakers,
+Lifestyle/commute) are not parsed by Python. They are passed verbatim to the
+`property-analyst` subagent, which maps them onto its `deal_breaker_status` output:
+Deal-breakers and failed Must-haves -> `eliminate`; Warning flags -> `caution`;
+Nice-to-haves are rewarded in the writeup; Lifestyle is the interpretive lens.
 
 ## RentCast endpoint
 

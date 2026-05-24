@@ -52,7 +52,7 @@ suggest loosening one.
 ## Step 2 - enrich the top candidates (parallel property-analyst subagents)
 
 Read `data/candidates.json` and the prose sections of `wishlist.md` (Must-haves,
-Nice-to-haves, Deal-breakers, Lifestyle/commute).
+Nice-to-haves, Warning flags, Deal-breakers, Lifestyle/commute).
 
 For each of the top `enrich_top_n` candidates, spawn a `property-analyst` subagent. Send
 all of them in a SINGLE message (multiple Task calls) so they run concurrently. Pass each
@@ -69,6 +69,8 @@ Combine the numeric score and the analyst's `qual_score` into a final order:
 
 - Drop any home with `deal_breaker_status: "eliminate"` from the picks; keep it for the
   "eliminated" section with its triggering reason.
+- Keep homes with `deal_breaker_status: "caution"` in the ranking, but make sure the
+  report shows the warning prominently (these are the wishlist's Warning-flags items).
 - Final score = `0.6 * numeric_score + 0.4 * (qual_score * 10)` for the survivors. This
   weighting is a sensible default; if the user has asked for "trust the numbers more" or
   "location is everything", adjust the split and say so in the report.
