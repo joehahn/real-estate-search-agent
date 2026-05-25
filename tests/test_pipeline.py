@@ -35,6 +35,7 @@ RAW = [
 WISH = Wishlist(
     zip_codes=["78613"], region=None, center=None, center_lat=None, center_lon=None,
     radius_miles=None, prefer_near=None, prefer_lat=None, prefer_lon=None,
+    acres_sweet_min=None, acres_sweet_max=None,
     price_min=0, price_max=750000, bedrooms_min=3,
     bathrooms_min=2, acres_min=0.25, property_types=["Single Family"],
     max_days_on_market=None,
@@ -142,3 +143,18 @@ def test_proximity_weight_dropped_when_no_prefer_point():
                                  __import__("dataclasses").replace(
                                      WISH, weights={"price": 0.5, "proximity": 0.5}))
     assert "proximity" not in ranked[0]["score_breakdown"]
+
+
+def test_acres_sweet_spot_beats_oversized_lot():
+    import dataclasses
+    base = {"propertyType": "Single Family", "price": 900000, "bedrooms": 5,
+            "bathrooms": 3, "latitude": 35.9, "longitude": -84.0}
+    in_range = {**base, "id": "sweet", "formattedAddress": "sweet", "lotSize": int(3*43560)}   # 3 ac
+    huge = {**base, "id": "huge", "formattedAddress": "huge", "lotSize": int(40*43560)}          # 40 ac
+    w = dataclasses.replace(
+        WISH, price_max=1000000, bedrooms_min=5, acres_min=1.5,
+        acres_sweet_min=1.5, acres_sweet_max=5.0, weights={"acres": 1.0})
+    ranked, _ = filter_and_score([normalize(huge), normalize(in_range)], w)
+    assert ranked[0]["id"] == "sweet"          # 3 ac (in range) beats 40 ac
+    assert ranked[0]["acres_sweet_dist"] == 0.0
+    assert ranked[1]["acres_sweet_dist"] == 35.0  # 40 - 5

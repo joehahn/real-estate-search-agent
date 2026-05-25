@@ -88,10 +88,12 @@ def score_candidates(homes: list[dict], w: Wishlist) -> list[dict]:
     if not homes:
         return []
 
+    weights = dict(w.weights)
+    dims = dict(_DIMS)
+
     # Proximity dimension: distance from each home to the preferred point. Only active if
     # the wishlist gives a geocoded prefer_near; otherwise we drop the weight so it does
     # not dilute the others.
-    weights = dict(w.weights)
     if w.prefer_lat is not None and w.prefer_lon is not None:
         for h in homes:
             h["distance_pref_mi"] = _haversine_mi(
@@ -99,19 +101,29 @@ def score_candidates(homes: list[dict], w: Wishlist) -> list[dict]:
     else:
         weights.pop("proximity", None)
 
+    # Acreage scoring: by default more acres is better. If the wishlist sets a sweet-spot
+    # range, score instead by how far a lot falls OUTSIDE [min, max] (0 inside = best), so
+    # a 2-5 acre target is not beaten by a 40-acre parcel you would not want to maintain.
+    if w.acres_sweet_min is not None and w.acres_sweet_max is not None:
+        lo, hi = w.acres_sweet_min, w.acres_sweet_max
+        for h in homes:
+            a = h.get("acres")
+            h["acres_sweet_dist"] = None if a is None else max(0.0, lo - a, a - hi)
+        dims["acres"] = ("acres_sweet_dist", False)  # smaller distance from range = better
+
     total_weight = sum(weights.values()) or 1.0
     ranges = {
         dim: _minmax([h.get(field) for h in homes])
-        for dim, (field, _) in _DIMS.items()
+        for dim, (field, _) in dims.items()
     }
 
     for h in homes:
         breakdown = {}
         score = 0.0
         for dim, weight in weights.items():
-            if dim not in _DIMS or weight == 0:
+            if dim not in dims or weight == 0:
                 continue
-            field, higher = _DIMS[dim]
+            field, higher = dims[dim]
             lo, hi = ranges[dim]
             unit = _norm(h.get(field), lo, hi, higher_is_better=higher)
             contribution = (weight / total_weight) * unit

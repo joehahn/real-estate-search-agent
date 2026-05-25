@@ -27,6 +27,8 @@ class Wishlist:
     prefer_near: str | None
     prefer_lat: float | None
     prefer_lon: float | None
+    acres_sweet_min: float | None
+    acres_sweet_max: float | None
     price_min: float
     price_max: float
     bedrooms_min: float
@@ -132,6 +134,8 @@ def load_wishlist(path: str | Path = "wishlist.md") -> Wishlist:
         prefer_near=str(parsed["prefer_near"]) if parsed.get("prefer_near") else None,
         prefer_lat=float(parsed["prefer_lat"]) if parsed.get("prefer_lat") is not None else None,
         prefer_lon=float(parsed["prefer_lon"]) if parsed.get("prefer_lon") is not None else None,
+        acres_sweet_min=float(parsed["acres_sweet_min"]) if parsed.get("acres_sweet_min") is not None else None,
+        acres_sweet_max=float(parsed["acres_sweet_max"]) if parsed.get("acres_sweet_max") is not None else None,
         price_min=float(parsed.get("price_min", 0) or 0),
         price_max=float(parsed.get("price_max", 0) or 0),
         bedrooms_min=float(parsed.get("bedrooms_min", 0) or 0),

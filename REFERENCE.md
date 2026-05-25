@@ -66,6 +66,7 @@ real-estate-search-agent/
 | `radius_miles` | number or absent | search radius. With center_lat/lon set, this triggers radius mode: ONE API call (price/beds/type pushed server-side), good for "within X miles of a point" |
 | `prefer_near` | string or absent | preferred-area label; a skill geocodes it into prefer_lat/prefer_lon. Drives the `proximity` weight (homes are still searched area-wide, but closer ones score higher) |
 | `prefer_lat` / `prefer_lon` | float or absent | geocoded preferred point for proximity scoring |
+| `acres_sweet_min` / `acres_sweet_max` | float or absent | target acreage range. When set, the `acres` weight scores by distance OUTSIDE the range (lots inside score best; oversized lots score lower) instead of "more is better" |
 
 Search mode is `radius` when `center_lat`, `center_lon`, and `radius_miles` are all set;
 otherwise `zips`. Radius mode is one call regardless of area size; zip mode is one call
