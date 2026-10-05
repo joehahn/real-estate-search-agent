@@ -2,6 +2,7 @@
 
 **Author:** Joe Hahn
 **Email:** jmh.datasciences@gmail.com
+**Consulting:** [jmh-datasciences.com](https://jmh-datasciences.com)
 **Date:** 2026-May-24
 **branch:** main
 
